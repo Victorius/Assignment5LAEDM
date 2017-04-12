@@ -6,8 +6,9 @@ from sklearn import metrics
 from sklearn import neighbors
 from sklearn import naive_bayes
 from sklearn import ensemble
+from collections import Counter
 
-
+#feature calculates the percentage of success submissions per user
 def percentage_of_success_submissions(data):
     result_dict = {}
     users = data.groupby(by='user_id')
@@ -23,7 +24,22 @@ def percentage_of_success_submissions(data):
         result_dict[i] = correct_number / (correct_number + wrong_number)
     return result_dict
 
+#
+#feature calculates the average number of success submission per task for each user
+def percentage(data):
+    result_dict = {}
+    grouped_data = data.groupby(by=['user_id', 'step_id'])
+    grouped = data.groupby(by='user_id')
+    for i in grouped.size().index:
+        result = []
+        for k in grouped.get_group(i)['step_id']:
+            c = Counter(grouped_data.get_group((i, k))['status'])
+            a = c['correct'] / (c['correct'] + c['wrong'])
+            result.append(a)
+        result_dict[i] = np.mean(result)
+    return result_dict
 
+#feature calculates the average amount of submissions per day
 def average_subbmissions_per_day(dataframe):
     result_dict = {}
     users = dataframe.groupby(by='user_id')
@@ -47,7 +63,7 @@ def classifier_f1(classifier, boundary_value, y_data, x_data):
     f1 = 2 * precision * recall / (recall + precision)
     return f1
 
-
+#feature calculates the number of comments for tasks related to first module
 def new_one_feature(dataframe, submissions_df):
     grouped_df_by_user = dataframe.groupby(by='user_id')
     grouped_submissions_by_user = submissions_df.groupby(by='user_id')
@@ -79,7 +95,8 @@ def calculation_the_best_result(submission_df, target_df, comments_df):
     new_feature_df = None
     if comments_df is not None:
         new_feature_df = new_one_feature(dataframe=comments_df, submissions_df=submission_df)
-    feature_one = percentage_of_success_submissions(submission_df)
+    #feature_one = percentage_of_success_submissions(submission_df)
+    feature_one = percentage(submission_df)
     feature_two = average_subbmissions_per_day(submission_df)
     x = []
     y = []
